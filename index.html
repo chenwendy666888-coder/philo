@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>哲学家对话</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEAE1; --surface:#F7F5EF; --ink:#26231D; --ink-soft:#726C5F;
+    --line:#DBD6CA; --slate:#2C3A44;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);height:100vh;display:flex;overflow:hidden;}
+  .sidebar{width:264px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;height:100%;}
+  .brand{padding:22px 20px 14px;border-bottom:1px solid var(--line);}
+  .brand h1{font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0;letter-spacing:.5px;}
+  .brand p{margin:4px 0 0;font-size:12px;color:var(--ink-soft);}
+  .plist{flex:1;overflow-y:auto;padding:8px;}
+  .pitem{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:10px;cursor:pointer;margin-bottom:2px;border:1px solid transparent;}
+  .pitem:hover{background:#efece4;}
+  .pitem.active{background:#fff;border-color:var(--line);}
+  .seal{width:34px;height:34px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Newsreader',serif;font-size:18px;font-weight:500;}
+  .pmeta{min-width:0;}
+  .pmeta .pn{font-size:14px;font-weight:500;line-height:1.2;}
+  .pmeta .pd{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .addbtn{margin:8px;padding:10px;border:1px dashed var(--line);background:none;border-radius:10px;color:var(--ink-soft);font-family:inherit;font-size:13px;cursor:pointer;}
+  .addbtn:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .main{flex:1;display:flex;flex-direction:column;height:100%;min-width:0;}
+  .topbar{padding:18px 26px;border-bottom:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .topbar .who{min-width:0;}
+  .topbar h2{font-family:'Newsreader',serif;font-weight:500;font-size:24px;margin:0;}
+  .topbar .persona{margin:3px 0 0;font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .toolbtns{display:flex;gap:8px;flex-shrink:0;}
+  .toolbtns button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+  .toolbtns button:hover{color:var(--ink);border-color:var(--ink-soft);}
+  .thread{flex:1;overflow-y:auto;padding:26px;display:flex;flex-direction:column;gap:20px;}
+  .empty{margin:auto;text-align:center;color:var(--ink-soft);max-width:340px;}
+  .empty .q{font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:var(--ink);margin-bottom:8px;}
+  .row{display:flex;gap:12px;max-width:760px;}
+  .row.me{align-self:flex-end;flex-direction:row-reverse;}
+  .msg-seal{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Newsreader',serif;font-size:16px;margin-top:2px;}
+  .bubble{padding:2px 2px;}
+  .bubble .nm{font-size:12px;font-weight:500;margin-bottom:3px;font-family:'Newsreader',serif;letter-spacing:.3px;}
+  .bubble .bd{font-family:'Newsreader',serif;font-size:17px;line-height:1.65;white-space:pre-wrap;}
+  .me .bubble{background:var(--slate);color:#fff;border-radius:14px 14px 3px 14px;padding:11px 15px;}
+  .me .bubble .bd{font-family:'Inter',sans-serif;font-size:15px;line-height:1.55;}
+  .plain{margin-top:10px;padding:2px 0 2px 13px;border-left:2px solid var(--line);border-radius:0;font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.7;color:var(--ink-soft);}
+  .plain-tag{display:inline-block;font-size:11px;font-weight:500;margin-right:7px;letter-spacing:.5px;}
+  .think{color:var(--ink-soft);font-style:italic;font-family:'Newsreader',serif;font-size:16px;}
+  .composer{border-top:1px solid var(--line);padding:14px 26px 18px;background:var(--surface);}
+  .cbox{display:flex;gap:10px;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 14px;}
+  .cbox textarea{flex:1;border:none;outline:none;resize:none;font-family:inherit;font-size:15px;line-height:1.5;max-height:140px;background:none;color:var(--ink);padding:6px 0;}
+  .send{border:none;border-radius:10px;color:#fff;width:42px;height:38px;cursor:pointer;flex-shrink:0;font-size:17px;display:flex;align-items:center;justify-content:center;}
+  .send:disabled{opacity:.4;cursor:default;}
+  .hint{font-size:11px;color:var(--ink-soft);margin:8px 2px 0;}
+  .veil{position:absolute;inset:0;background:rgba(38,35,29,.4);display:none;align-items:center;justify-content:center;padding:20px;}
+  .veil.show{display:flex;}
+  .modal{background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:420px;}
+  .modal h3{font-family:'Newsreader',serif;font-weight:500;margin:0 0 4px;font-size:20px;}
+  .modal p{margin:0 0 16px;font-size:12.5px;color:var(--ink-soft);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
+  .field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:14px;background:#fff;color:var(--ink);outline:none;resize:vertical;}
+  .field input:focus,.field textarea:focus{border-color:var(--slate);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:6px;}
+  .modal-actions button{border-radius:9px;padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;border:1px solid var(--line);}
+  .btn-ghost{background:none;color:var(--ink-soft);}
+  .btn-solid{background:var(--slate);color:#fff;border-color:var(--slate);}
+  .menu-toggle{display:none;}
+  @media(max-width:720px){
+    .sidebar{position:absolute;z-index:5;height:100%;transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 30px rgba(0,0,0,.15);}
+    .sidebar.open{transform:translateX(0);}
+    .menu-toggle{display:flex;}
+    .row{max-width:100%;}
+  }
+</style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><h1>哲学家对话</h1><p>挑一位思想家，问你想问的一切</p></div>
+    <div class="plist" id="plist"></div>
+    <button class="addbtn" id="addBtn">＋ 添加一位哲学家</button>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <button class="toolbtns menu-toggle" id="menuToggle" style="padding:6px 9px;">☰</button>
+        <div class="who"><h2 id="curName">—</h2><p class="persona" id="curPersona"></p></div>
+      </div>
+      <div class="toolbtns">
+        <button id="exportBtn">导出对话</button>
+        <button id="clearBtn">清空对话</button>
+      </div>
+    </div>
+    <div class="thread" id="thread"></div>
+    <div class="composer">
+      <div class="cbox">
+        <textarea id="input" rows="1" placeholder="问点什么……（Enter 发送，Shift+Enter 换行）"></textarea>
+        <button class="send" id="sendBtn">↑</button>
+      </div>
+      <div class="hint">对话会自动保存在本浏览器中，关掉再打开还在。</div>
+    </div>
+  </main>
+
+  <div class="veil" id="veil">
+    <div class="modal">
+      <h3>添加一位哲学家</h3>
+      <p>给它一个名字，再用一句话描述它的思想与说话风格。</p>
+      <div class="field"><label>名字</label><input id="mName" placeholder="例如：柏拉图、王阳明、罗素……"></div>
+      <div class="field"><label>人设（它是谁、怎么想、怎么说话）</label><textarea id="mPersona" rows="3" placeholder="例如：古希腊哲学家，认为现实世界只是理念世界的影子，善用比喻讲道理。"></textarea></div>
+      <div class="modal-actions"><button class="btn-ghost" id="mCancel">取消</button><button class="btn-solid" id="mSave">添加</button></div>
+    </div>
+  </div>
+
+<script>
+const PALETTE = ["#6B7A3F","#3B5B78","#8A3A3A","#2E6B5A","#5A4A6B","#9A6A2E","#3E5C4A","#7A3A5A"];
+const DEFAULTS = [
+  {name:"苏格拉底", color:"#6B7A3F", persona:"古希腊哲学家，善用诘问法：不断追问、揭示对方论证里没检验过的前提，很少直接给答案，而是引导人自己想清楚。"},
+  {name:"康德",     color:"#3B5B78", persona:"德国哲学家，主张人是目的而非手段，重视普遍的道德法则与理性义务，说话严谨、讲原则。"},
+  {name:"尼采",     color:"#8A3A3A", persona:"德国哲学家，风格锋利、常用格言，质疑既有道德，强调权力意志、超越自我与自己创造价值。"},
+  {name:"孔子",     color:"#2E6B5A", persona:"中国先秦思想家，重视仁、礼、修身与人伦，常以温和、务实、贴近生活的方式启发人。"},
+  {name:"萨特",     color:"#5A4A6B", persona:"法国存在主义哲学家，强调人是自由的、要为自己的每个选择负责，'存在先于本质'。"},
+  {name:"庄子",     color:"#3E5C4A", persona:"中国先秦道家思想家，风格汪洋恣肆、爱用寓言与意象（如庄周梦蝶、逍遥游、鲲鹏），主张顺应自然、齐物我、看淡世俗得失，语言诗意飘逸。"}
+];
+
+let philosophers = [], chats = {}, current = null;
+const mem = {};
+async function sget(k){ try{ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; }catch(e){ return mem[k] ?? null; } }
+async function sset(k,v){ try{ await window.storage.set(k, JSON.stringify(v)); }catch(e){ mem[k] = v; } }
+function initial(name){ return (name || "?").trim().charAt(0); }
+
+async function boot(){
+  philosophers = await sget("philosophers") || DEFAULTS.slice();
+  chats = await sget("chats") || {};
+  current = philosophers[0]?.name || null;
+  renderList(); renderThread(); renderHeader();
+}
+function renderList(){
+  const el = document.getElementById("plist"); el.innerHTML = "";
+  philosophers.forEach(p=>{
+    const d = document.createElement("div");
+    d.className = "pitem" + (p.name===current ? " active":"");
+    d.innerHTML = `<div class="seal" style="background:${p.color}">${initial(p.name)}</div><div class="pmeta"><div class="pn">${p.name}</div><div class="pd">${p.persona}</div></div>`;
+    d.onclick = ()=>{ current = p.name; renderList(); renderThread(); renderHeader(); document.getElementById("sidebar").classList.remove("open"); };
+    el.appendChild(d);
+  });
+}
+function cur(){ return philosophers.find(p=>p.name===current); }
+function renderHeader(){
+  const p = cur();
+  document.getElementById("curName").textContent = p ? p.name : "—";
+  document.getElementById("curPersona").textContent = p ? p.persona : "";
+  if(p) document.getElementById("sendBtn").style.background = p.color;
+}
+function renderThread(){
+  const el = document.getElementById("thread"); el.innerHTML = "";
+  const p = cur(); const msgs = chats[current] || [];
+  if(msgs.length === 0){
+    el.innerHTML = `<div class="empty"><div class="q">“未经省察的人生不值得过。”</div><div>向 ${p ? p.name : "这位哲学家"} 提出你的第一个问题吧。</div></div>`;
+    return;
+  }
+  msgs.forEach(m=>{
+    if(m.role === "user"){
+      el.innerHTML += `<div class="row me"><div class="bubble"><div class="bd">${esc(m.text)}</div></div></div>`;
+    }else{
+      el.innerHTML += `<div class="row"><div class="msg-seal" style="background:${p.color}">${initial(p.name)}</div><div class="bubble"><div class="nm" style="color:${p.color}">${p.name}</div>${bodyHTML(m.text, p.color)}</div></div>`;
+    }
+  });
+  el.scrollTop = el.scrollHeight;
+}
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function bodyHTML(text, color){
+  const parts = (text||"").split("【大白话】");
+  let html = `<div class="bd">${esc((parts[0]||"").trim())}</div>`;
+  if(parts.length > 1){
+    const plain = esc(parts.slice(1).join("【大白话】").trim());
+    html += `<div class="plain" style="border-color:${color}"><span class="plain-tag" style="color:${color}">大白话</span>${plain}</div>`;
+  }
+  return html;
+}
+
+// ★ 唯一改动的地方：调自己的 /api/chat 代理，而不是直连模型。
+//   key 在服务器那边（Vercel 环境变量），这里的浏览器代码完全碰不到 key。
+async function callModel(persona, history){
+  const messages = history.map(m=>({role:m.role, content:m.text}));
+  const res = await fetch("/api/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      system: persona + " 请分两部分用中文回答：先以这位哲学家本人的口吻和风格说一段（3–4 句，保留他特有的语气、意象和思想，真正回应用户的问题，不要出戏）；然后另起一行，先写“【大白话】”四个字，再用最通俗、最日常的话把你刚才那段的意思讲清楚（2–3 句，像跟朋友聊天一样，别再文绉绉）。",
+      messages: messages
+    })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error || ("请求失败："+res.status));
+  return data.reply;
+}
+
+async function send(){
+  const ta = document.getElementById("input");
+  const text = ta.value.trim(); const p = cur();
+  if(!text || !p) return;
+  ta.value = ""; ta.style.height = "auto";
+  if(!chats[current]) chats[current] = [];
+  chats[current].push({role:"user", text});
+  renderThread(); await sset("chats", chats);
+
+  const thread = document.getElementById("thread");
+  const holder = document.createElement("div");
+  holder.className = "row";
+  holder.innerHTML = `<div class="msg-seal" style="background:${p.color}">${initial(p.name)}</div><div class="bubble"><div class="nm" style="color:${p.color}">${p.name}</div><div class="think">正在斟酌……</div></div>`;
+  thread.appendChild(holder); thread.scrollTop = thread.scrollHeight;
+
+  document.getElementById("sendBtn").disabled = true;
+  try{
+    const reply = await callModel(p.persona, chats[current]);
+    chats[current].push({role:"assistant", text: reply || "（没有回应）"});
+  }catch(e){
+    chats[current].push({role:"assistant", text:"（这次没能接通：" + e.message + "）"});
+  }
+  document.getElementById("sendBtn").disabled = false;
+  await sset("chats", chats);
+  renderThread();
+}
+function exportChat(){
+  const p = cur(); const msgs = chats[current] || [];
+  if(!p || msgs.length===0) return;
+  let out = `与 ${p.name} 的对话\n${"=".repeat(24)}\n\n`;
+  msgs.forEach(m=> out += (m.role==="user" ? "我：" : p.name+"：") + m.text + "\n\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([out],{type:"text/plain;charset=utf-8"}));
+  a.download = `与${p.name}的对话.txt`; a.click();
+}
+async function clearChat(){ if(!current) return; chats[current] = []; await sset("chats", chats); renderThread(); }
+function openModal(){ document.getElementById("veil").classList.add("show"); }
+function closeModal(){ document.getElementById("veil").classList.remove("show"); document.getElementById("mName").value=""; document.getElementById("mPersona").value=""; }
+async function addPhilosopher(){
+  const name = document.getElementById("mName").value.trim();
+  const persona = document.getElementById("mPersona").value.trim();
+  if(!name || !persona) return;
+  if(philosophers.some(p=>p.name===name)){ current=name; renderList(); renderThread(); renderHeader(); closeModal(); return; }
+  const color = PALETTE[philosophers.length % PALETTE.length];
+  philosophers.push({name, persona, color});
+  await sset("philosophers", philosophers);
+  current = name; renderList(); renderThread(); renderHeader(); closeModal();
+}
+
+document.getElementById("sendBtn").onclick = send;
+const input = document.getElementById("input");
+input.addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }});
+input.addEventListener("input", ()=>{ input.style.height="auto"; input.style.height=Math.min(input.scrollHeight,140)+"px"; });
+document.getElementById("exportBtn").onclick = exportChat;
+document.getElementById("clearBtn").onclick = clearChat;
+document.getElementById("addBtn").onclick = openModal;
+document.getElementById("mCancel").onclick = closeModal;
+document.getElementById("mSave").onclick = addPhilosopher;
+document.getElementById("menuToggle").onclick = ()=>document.getElementById("sidebar").classList.toggle("open");
+boot();
+</script>
+</body>
+</html>
